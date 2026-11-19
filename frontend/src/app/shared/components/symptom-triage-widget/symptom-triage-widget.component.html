@@ -1,0 +1,96 @@
+<div class="triage">
+  <div class="triage__controls">
+    <fieldset class="triage__group">
+      <legend class="triage__legend"><span class="triage__step">1</span> Aké máte zvieratko?</legend>
+      <div class="triage__pets" role="radiogroup" aria-label="Druh zvieratka">
+        @for (p of pets; track p.value) {
+          <button
+            type="button"
+            role="radio"
+            class="triage__pet"
+            [class.is-selected]="pet() === p.value"
+            [attr.aria-checked]="pet() === p.value"
+            (click)="selectPet(p.value)"
+          >
+            <app-icon [name]="p.icon" [size]="22" />
+            {{ p.label }}
+          </button>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset class="triage__group">
+      <legend class="triage__legend"><span class="triage__step">2</span> Čo vás trápi?</legend>
+      <div class="triage__symptoms" role="radiogroup" aria-label="Situácia alebo príznak">
+        @for (s of symptoms; track s.id) {
+          <button
+            type="button"
+            role="radio"
+            class="triage__symptom"
+            [class.is-selected]="symptomId() === s.id"
+            [attr.aria-checked]="symptomId() === s.id"
+            (click)="selectSymptom(s.id)"
+          >
+            <span class="triage__symptom-icon"><app-icon [name]="s.icon" [size]="18" /></span>
+            <span>{{ s.label }}</span>
+          </button>
+        }
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="triage__result" aria-live="polite">
+    @if (guidance(); as g) {
+      <div class="result" [attr.data-level]="g.level">
+        <div class="result__level">
+          <span class="result__level-icon"><app-icon [name]="urgencyMeta[g.level].icon" [size]="22" /></span>
+          <div>
+            <small>Odporúčanie pre: {{ petLabel() }} · {{ symptom()?.label }}</small>
+            <strong>{{ urgencyMeta[g.level].label }}</strong>
+          </div>
+        </div>
+
+        <p class="result__summary">{{ g.summary }}</p>
+
+        <h4 class="result__title">Ako sa pripraviť</h4>
+        <ul class="check-list">
+          @for (item of g.checklist; track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+
+        <div class="result__actions">
+          @if (g.level === 'emergency') {
+            <a class="btn btn--accent btn--lg" [href]="config.contact.emergencyPhoneHref">
+              <app-icon name="phone" [size]="18" />
+              Volať <span class="phone">{{ config.contact.emergencyPhone }}</span>
+            </a>
+            <a class="btn btn--ghost" routerLink="/pohotovost-a-kontakt" fragment="pohotovost">Ako nás nájsť</a>
+          } @else {
+            <a class="btn btn--lg" routerLink="/objednat-sa" [queryParams]="bookingParams()">
+              <app-icon name="calendar" [size]="18" />
+              Objednať sa online
+            </a>
+            <a class="btn btn--ghost" [href]="config.contact.phoneHref">
+              <app-icon name="phone" [size]="16" />
+              Zavolať na recepciu
+            </a>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="result result--empty">
+        <span class="result__placeholder-icon"><app-icon name="stethoscope" [size]="30" /></span>
+        <h3>Vyberte situáciu, ktorá najlepšie vystihuje stav vášho miláčika</h3>
+        <p class="muted">
+          Okamžite vám ukážeme, ako rýchlo by mal byť vyšetrený a ako sa na návštevu pripraviť.
+        </p>
+      </div>
+    }
+
+    <p class="triage__disclaimer">
+      <app-icon name="info" [size]="16" />
+      Pomocník slúži len na orientáciu a nenahrádza vyšetrenie lekárom. Ak si nie ste istí, radšej nám zavolajte.
+    </p>
+  </div>
+</div>

@@ -1,0 +1,119 @@
+<div class="topbar">
+  <div class="container topbar__inner">
+    <span class="topbar__status" [class.is-open]="status.isOpen">
+      <span class="topbar__dot" aria-hidden="true"></span>
+      {{ status.label }}
+    </span>
+    <span class="topbar__item">
+      <app-icon name="map-pin" [size]="15" />
+      {{ config.address.street }}, {{ config.address.city }}
+    </span>
+    <a class="topbar__item topbar__emergency" [href]="config.contact.emergencyPhoneHref">
+      <app-icon name="siren" [size]="15" />
+      Nonstop pohotovosť: <strong class="phone">{{ config.contact.emergencyPhone }}</strong>
+    </a>
+  </div>
+</div>
+
+<header class="header" [class.is-scrolled]="scrolled()">
+  <div class="container header__inner">
+    <a routerLink="/" class="header__brand" aria-label="{{ config.brand.name }} – domov">
+      <app-logo />
+    </a>
+
+    <nav class="nav" aria-label="Hlavná navigácia">
+      <ul role="list" class="nav__list">
+        @for (link of links; track link.label) {
+          <li>
+            <a
+              class="nav__link"
+              [routerLink]="link.path"
+              [fragment]="link.fragment"
+              routerLinkActive="is-active"
+              [routerLinkActiveOptions]="link.fragment ? fragmentActiveOptions : activeOptions"
+            >
+              {{ link.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="header__actions">
+      <a class="header__phone" [href]="config.contact.phoneHref">
+        <span class="header__phone-icon"><app-icon name="phone" [size]="16" /></span>
+        <span class="header__phone-text">
+          <small>Recepcia</small>
+          <span class="phone">{{ config.contact.phone }}</span>
+        </span>
+      </a>
+      <a routerLink="/objednat-sa" class="btn btn--sm header__cta">
+        <app-icon name="calendar" [size]="17" />
+        Objednať sa online
+      </a>
+      <button
+        type="button"
+        class="header__burger"
+        (click)="toggleMenu()"
+        [attr.aria-expanded]="menuOpen()"
+        aria-controls="mobile-drawer"
+        [attr.aria-label]="menuOpen() ? 'Zavrieť menu' : 'Otvoriť menu'"
+      >
+        <app-icon [name]="menuOpen() ? 'x' : 'menu'" [size]="24" />
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile drawer -->
+<div class="drawer-backdrop" [class.is-open]="menuOpen()" (click)="closeMenu()" aria-hidden="true"></div>
+<aside
+  id="mobile-drawer"
+  class="drawer"
+  [class.is-open]="menuOpen()"
+  [attr.aria-hidden]="!menuOpen()"
+  [attr.inert]="menuOpen() ? null : ''"
+  aria-label="Mobilná navigácia"
+>
+  <div class="drawer__head">
+    <app-logo />
+    <button type="button" class="drawer__close" (click)="closeMenu()" aria-label="Zavrieť menu">
+      <app-icon name="x" [size]="24" />
+    </button>
+  </div>
+
+  <nav class="drawer__nav">
+    <a routerLink="/" class="drawer__link" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+      Domov <app-icon name="chevron-right" [size]="18" />
+    </a>
+    @for (link of links; track link.label) {
+      <a
+        class="drawer__link"
+        [routerLink]="link.path"
+        [fragment]="link.fragment"
+        routerLinkActive="is-active"
+        [routerLinkActiveOptions]="link.fragment ? fragmentActiveOptions : activeOptions"
+      >
+        {{ link.label }} <app-icon name="chevron-right" [size]="18" />
+      </a>
+    }
+  </nav>
+
+  <div class="drawer__actions">
+    <a routerLink="/objednat-sa" class="btn btn--lg btn--block">
+      <app-icon name="calendar" [size]="18" />
+      Objednať sa online
+    </a>
+    <a [href]="config.contact.phoneHref" class="btn btn--outline btn--block">
+      <app-icon name="phone" [size]="18" />
+      <span class="phone">{{ config.contact.phone }}</span>
+    </a>
+    <a [href]="config.contact.emergencyPhoneHref" class="drawer__emergency">
+      <app-icon name="siren" [size]="22" />
+      <span>
+        <small>Nonstop pohotovosť</small>
+        <strong class="phone">{{ config.contact.emergencyPhone }}</strong>
+      </span>
+    </a>
+  </div>
+</aside>

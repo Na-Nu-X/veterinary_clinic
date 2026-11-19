@@ -1,0 +1,100 @@
+<footer class="footer">
+  <div class="footer__emergency">
+    <div class="container footer__emergency-inner">
+      <div class="footer__emergency-text">
+        <span class="footer__emergency-icon"><app-icon name="siren" [size]="26" /></span>
+        <div>
+          <strong>Akútny stav? Nečakajte na online termín.</strong>
+          <p>{{ config.contact.emergencyNote }}</p>
+        </div>
+      </div>
+      <a class="btn btn--accent btn--lg" [href]="config.contact.emergencyPhoneHref">
+        <app-icon name="phone" [size]="18" />
+        <span class="phone">{{ config.contact.emergencyPhone }}</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="container footer__grid">
+    <section class="footer__brand">
+      <app-logo [inverse]="true" />
+      <p>{{ config.brand.tagline }}</p>
+      <ul role="list" class="footer__social">
+        @for (s of config.social; track s.url) {
+          <li>
+            <a [href]="s.url" target="_blank" rel="noopener" [attr.aria-label]="s.label">
+              <app-icon [name]="s.icon" [size]="18" />
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section aria-labelledby="footer-address">
+      <h2 id="footer-address" class="footer__title">Kde nás nájdete</h2>
+      <address>
+        <a [href]="config.address.mapUrl" target="_blank" rel="noopener" class="footer__line">
+          <app-icon name="map-pin" [size]="18" />
+          <span>
+            {{ config.address.street }}<br />
+            {{ config.address.postalCode }} {{ config.address.city }}
+          </span>
+        </a>
+        <a [href]="config.contact.phoneHref" class="footer__line">
+          <app-icon name="phone" [size]="18" />
+          <span class="phone">{{ config.contact.phone }}</span>
+        </a>
+        <a [href]="'mailto:' + config.contact.email" class="footer__line">
+          <app-icon name="mail" [size]="18" />
+          <span>{{ config.contact.email }}</span>
+        </a>
+      </address>
+      <p class="footer__note">
+        <app-icon name="car" [size]="18" />
+        <span>{{ config.address.parking }}</span>
+      </p>
+    </section>
+
+    <section aria-labelledby="footer-hours">
+      <h2 id="footer-hours" class="footer__title">Ordinačné hodiny</h2>
+      <dl class="footer__hours">
+        @for (row of config.openingHours; track row.days) {
+          <div>
+            <dt>{{ row.days }}</dt>
+            <dd class="tabular">{{ row.hours }}</dd>
+          </div>
+        }
+      </dl>
+      <p class="footer__note footer__note--accent">
+        <app-icon name="siren" [size]="18" />
+        <span>
+          Mimo ordinačných hodín volajte pohotovostnú linku
+          <a class="phone" [href]="config.contact.emergencyPhoneHref">{{ config.contact.emergencyPhone }}</a>.
+        </span>
+      </p>
+    </section>
+
+    <section aria-labelledby="footer-links">
+      <h2 id="footer-links" class="footer__title">Pre majiteľov</h2>
+      <ul role="list" class="footer__links">
+        <li><a routerLink="/objednat-sa">Online objednanie</a></li>
+        <li><a routerLink="/sluzby">Služby a orientačný cenník</a></li>
+        <li><a routerLink="/nas-tim">Náš tím lekárov</a></li>
+        <li><a routerLink="/pohotovost-a-kontakt" fragment="pohotovost">Pohotovosť</a></li>
+        <li><a routerLink="/pohotovost-a-kontakt" fragment="recepty">Žiadosť o recept / krmivo</a></li>
+        <li><a routerLink="/ochrana-osobnych-udajov">Ochrana osobných údajov (GDPR)</a></li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="container footer__legal">
+    <p>
+      © {{ year }} {{ config.legal.companyName }} · IČO: <span class="tabular">{{ config.legal.ico }}</span> · DIČ:
+      <span class="tabular">{{ config.legal.dic }}</span>
+    </p>
+    <p>{{ config.legal.chamberNote }}</p>
+    <p class="footer__legal-links">
+      <a routerLink="/ochrana-osobnych-udajov">Ochrana osobných údajov (GDPR)</a>
+    </p>
+  </div>
+</footer>
