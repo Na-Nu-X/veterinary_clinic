@@ -1,6 +1,7 @@
 """Public REST API views."""
 
 import django_filters
+from django.db import transaction
 from django.db.models import Count, Prefetch
 from rest_framework import mixins, viewsets
 from rest_framework.throttling import ScopedRateThrottle
@@ -12,6 +13,7 @@ from .models import (
     Veterinarian,
     VeterinaryService,
 )
+from .notifications import send_booking_emails
 from .serializers import (
     AppointmentBookingSerializer,
     DepartmentSerializer,
@@ -87,6 +89,11 @@ class AppointmentBookingViewSet(
 ):
     queryset = AppointmentBooking.objects.all()
     serializer_class = AppointmentBookingSerializer
+
+    def perform_create(self, serializer):
+        booking = serializer.save()
+        # Send only once the booking is safely committed; failures are logged, not raised.
+        transaction.on_commit(lambda: send_booking_emails(booking.pk))
 
 
 class PrescriptionRequestViewSet(

@@ -1,7 +1,11 @@
 from datetime import timedelta
+from unittest import mock
 
-from django.core.management import call_command
+from django.conf import settings
+from django.core import mail
 from django.core.cache import cache
+from django.core.management import call_command
+from django.test import override_settings
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
@@ -118,3 +122,88 @@ class ClinicApiTests(APITestCase):
     def test_submissions_are_write_only(self):
         self.assertEqual(self.client.get("/api/appointments/").status_code, 405)
         self.assertEqual(self.client.get("/api/prescriptions/").status_code, 405)
+
+
+class BookingEmailTests(APITestCase):
+    """Booking notification e-mails (Django's test runner uses the locmem backend)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_data", verbosity=0)
+
+    def setUp(self):
+        cache.clear()
+        self.payload = {
+            "pet_species": "macka",
+            "pet_name": "Micka",
+            "service": "ultrazvukove-cistenie-zubneho-kamena",
+            "visit_reason": "stomatologia",
+            "preferred_date": next_weekday().isoformat(),
+            "preferred_time_slot": "obed",
+            "owner_name": "Jana Nováková",
+            "phone": "+421 900 123 456",
+            "email": "jana@example.sk",
+            "notes": "Nerada cestuje.",
+            "gdpr_consent": True,
+        }
+
+    def post_booking(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.client.post("/api/appointments/", self.payload, format="json")
+
+    @override_settings(CLINIC_NOTIFICATION_EMAILS=["recepcia@example.sk", "lekar@example.sk"])
+    def test_new_booking_sends_client_confirmation_and_clinic_notification(self):
+        res = self.post_booking()
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(len(mail.outbox), 2)
+        client_mail, clinic_mail = mail.outbox
+        booking_id = res.data["id"]
+
+        # Client confirmation – Slovak, HTML alternative, replies go to the clinic.
+        self.assertEqual(client_mail.to, ["jana@example.sk"])
+        self.assertIn(f"č. {booking_id}", client_mail.subject)
+        self.assertIn("Micka", client_mail.body)
+        self.assertIn("Ultrazvukové čistenie zubného kameňa", client_mail.body)
+        self.assertIn("12-hodinová hladovka", client_mail.body)  # preparation notes
+        self.assertIn("Obed (11:00 – 14:00)", client_mail.body)
+        self.assertEqual(len(client_mail.alternatives), 1)
+        self.assertEqual(client_mail.alternatives[0][1], "text/html")
+        self.assertEqual(client_mail.reply_to, [settings.CLINIC_REPLY_TO_EMAIL])
+
+        # Clinic notification – all staff inboxes, admin link, reply goes to owner.
+        self.assertEqual(clinic_mail.to, ["recepcia@example.sk", "lekar@example.sk"])
+        self.assertIn("Micka", clinic_mail.subject)
+        self.assertIn("+421 900 123 456", clinic_mail.body)
+        self.assertIn("Nerada cestuje.", clinic_mail.body)
+        self.assertIn(f"/admin/clinic/appointmentbooking/{booking_id}/change/", clinic_mail.body)
+        self.assertEqual(clinic_mail.reply_to, ["jana@example.sk"])
+
+    def test_date_is_formatted_in_slovak(self):
+        from datetime import date
+
+        from .notifications import format_date_sk
+
+        self.assertEqual(format_date_sk(date(2026, 11, 20)), "piatok 20. novembra 2026")
+        self.assertEqual(format_date_sk(date(2027, 3, 1)), "pondelok 1. marca 2027")
+        self.post_booking()
+        booking = AppointmentBooking.objects.get()
+        self.assertIn(format_date_sk(booking.preferred_date), mail.outbox[0].body)
+
+    @override_settings(CLINIC_NOTIFICATION_EMAILS=[])
+    def test_no_clinic_notification_when_no_staff_inbox_configured(self):
+        self.post_booking()
+        self.assertEqual([m.to for m in mail.outbox], [["jana@example.sk"]])
+
+    def test_mail_failure_does_not_break_booking(self):
+        with mock.patch("django.core.mail.EmailMessage.send", side_effect=OSError("SMTP down")):
+            with self.assertLogs("clinic.notifications", level="ERROR") as logs:
+                res = self.post_booking()
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(AppointmentBooking.objects.count(), 1)
+        self.assertEqual(len(logs.records), 2)  # both messages logged, none raised
+
+    def test_invalid_booking_sends_nothing(self):
+        self.payload["gdpr_consent"] = False
+        res = self.post_booking()
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(mail.outbox, [])

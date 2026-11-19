@@ -1,0 +1,26 @@
+{% autoescape off %}Dobrý deň, {{ booking.owner_name }},
+
+ďakujeme za dôveru. Vašu online objednávku č. {{ booking.pk }} sme prijali.
+
+Presný čas vám potvrdíme telefonicky alebo e-mailom spravidla do 2 hodín v otváracích hodinách. Až do potvrdenia ide o predbežnú rezerváciu.
+
+ZHRNUTIE OBJEDNÁVKY
+Zvieratko:          {{ species_label }} · {{ booking.pet_name }}{% if booking.pet_age %} ({{ booking.pet_age }}){% endif %}
+Dôvod návštevy:     {{ reason_label }}{% if service %}
+Vyšetrenie:         {{ service.name }}{% endif %}
+Lekár:              {{ vet_label }}
+Preferovaný termín: {{ preferred_date_label }}, {{ time_slot_label }}
+{% if service and service.preparation_notes %}
+AKO SA PRIPRAVIŤ
+{{ service.preparation_notes }}
+{% endif %}
+Prineste, prosím, očkovací preukaz alebo pas spoločenského zvieraťa a prídite 5 – 10 minút pred dohodnutým časom.
+
+Potrebujete termín zmeniť alebo zrušiť? Zavolajte nám na {{ clinic_phone }} alebo jednoducho odpovedzte na tento e-mail.
+
+AKÚTNY STAV? Nečakajte na termín a volajte nonstop pohotovostnú linku {{ clinic_emergency_phone }}.
+
+S pozdravom
+tím {{ clinic_name }}
+{{ clinic_address }}
+{% endautoescape %}

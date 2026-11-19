@@ -138,6 +138,45 @@ CORS_ALLOWED_ORIGINS = env_list(
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", ",".join(CORS_ALLOWED_ORIGINS))
 
 
+# E-mail
+# Development default: the console backend prints e-mails to the runserver
+# output, so booking works without any SMTP server. In production set
+# EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend plus EMAIL_HOST etc.
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "10"))
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL", "Veterinárna klinika Harmónia <recepcia@klinika-harmonia.sk>"
+)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Clinic details used in notification e-mails (keep in sync with the
+# frontend's site.config.ts when rebranding).
+CLINIC_NAME = os.getenv("CLINIC_NAME", "Veterinárna klinika Harmónia")
+CLINIC_PHONE = os.getenv("CLINIC_PHONE", "+421 2 4820 1100")
+CLINIC_EMERGENCY_PHONE = os.getenv("CLINIC_EMERGENCY_PHONE", "+421 905 112 911")
+CLINIC_ADDRESS = os.getenv("CLINIC_ADDRESS", "Ružová dolina 14, 821 09 Bratislava")
+CLINIC_REPLY_TO_EMAIL = os.getenv("CLINIC_REPLY_TO_EMAIL", "recepcia@klinika-harmonia.sk")
+# Comma-separated list of staff inboxes that receive new-booking notifications.
+CLINIC_NOTIFICATION_EMAILS = env_list("CLINIC_NOTIFICATION_EMAILS", "recepcia@klinika-harmonia.sk")
+# Public base URL of this backend, used for the admin link in staff e-mails.
+BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "http://localhost:8000").rstrip("/")
+
+
+# Logging – surface e-mail delivery failures without breaking requests.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {"clinic": {"handlers": ["console"], "level": os.getenv("CLINIC_LOG_LEVEL", "INFO")}},
+}
+
+
 # Production hardening
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

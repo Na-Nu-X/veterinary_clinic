@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="sk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prijali sme vašu objednávku</title>
+  </head>
+  <body style="margin:0;padding:0;background:#F9FAF8;font-family:'Plus Jakarta Sans',Arial,Helvetica,sans-serif;color:#16211E;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAF8;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border:1px solid #DCE4DF;border-radius:16px;">
+            <tr>
+              <td style="padding:28px 32px 8px;">
+                <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:600;color:#164E46;">{{ clinic_name }}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 0;">
+                <h1 style="margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:500;line-height:1.25;">
+                  Ďakujeme, tešíme sa na {{ booking.pet_name }}!
+                </h1>
+                <p style="margin:0 0 8px;font-size:15px;line-height:1.6;color:#4B5B56;">
+                  Dobrý deň, {{ booking.owner_name }}, vašu online objednávku
+                  <strong style="color:#16211E;">č. {{ booking.pk }}</strong> sme prijali.
+                </p>
+                <p style="margin:0;font-size:15px;line-height:1.6;color:#4B5B56;">
+                  Presný čas vám potvrdíme telefonicky alebo e-mailom spravidla do 2 hodín v otváracích hodinách.
+                  Až do potvrdenia ide o predbežnú rezerváciu.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EEF3F0;border-radius:12px;">
+                  <tr><td style="padding:18px 20px 6px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#4B5B56;">Zhrnutie objednávky</td></tr>
+                  <tr><td style="padding:4px 20px;font-size:15px;"><span style="color:#4B5B56;">Zvieratko:</span> <strong>{{ species_label }} · {{ booking.pet_name }}</strong>{% if booking.pet_age %} ({{ booking.pet_age }}){% endif %}</td></tr>
+                  <tr><td style="padding:4px 20px;font-size:15px;"><span style="color:#4B5B56;">Dôvod návštevy:</span> <strong>{{ reason_label }}</strong></td></tr>
+                  {% if service %}<tr><td style="padding:4px 20px;font-size:15px;"><span style="color:#4B5B56;">Vyšetrenie:</span> <strong>{{ service.name }}</strong></td></tr>{% endif %}
+                  <tr><td style="padding:4px 20px;font-size:15px;"><span style="color:#4B5B56;">Lekár:</span> <strong>{{ vet_label }}</strong></td></tr>
+                  <tr><td style="padding:4px 20px 18px;font-size:15px;"><span style="color:#4B5B56;">Preferovaný termín:</span> <strong>{{ preferred_date_label }}, {{ time_slot_label }}</strong></td></tr>
+                </table>
+              </td>
+            </tr>
+            {% if service and service.preparation_notes %}
+            <tr>
+              <td style="padding:20px 32px 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#DCEBE6;border-radius:12px;">
+                  <tr><td style="padding:16px 20px;font-size:14px;line-height:1.6;color:#0F3A34;">
+                    <strong>Ako sa pripraviť:</strong> {{ service.preparation_notes }}
+                  </td></tr>
+                </table>
+              </td>
+            </tr>
+            {% endif %}
+            <tr>
+              <td style="padding:20px 32px 0;font-size:14px;line-height:1.6;color:#4B5B56;">
+                Prineste, prosím, očkovací preukaz alebo pas spoločenského zvieraťa a prídite 5 – 10 minút pred
+                dohodnutým časom. Termín zmeníte telefonicky na
+                <a href="tel:{{ clinic_phone|cut:' ' }}" style="color:#164E46;font-weight:700;white-space:nowrap;">{{ clinic_phone }}</a>
+                alebo odpoveďou na tento e-mail.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 32px 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F8E9E3;border-radius:12px;">
+                  <tr><td style="padding:14px 20px;font-size:14px;line-height:1.5;color:#6E3221;">
+                    <strong>Akútny stav?</strong> Nečakajte na termín a volajte nonstop pohotovosť
+                    <a href="tel:{{ clinic_emergency_phone|cut:' ' }}" style="color:#A9543B;font-weight:700;white-space:nowrap;">{{ clinic_emergency_phone }}</a>.
+                  </td></tr>
+                </table>
+              </td>
+            </tr>
+            <tr><td style="height:28px;line-height:28px;font-size:0;">&nbsp;</td></tr>
+            <tr>
+              <td style="padding:24px 32px 28px;font-size:13px;line-height:1.6;color:#4B5B56;border-top:1px solid #DCE4DF;">
+                S pozdravom, tím {{ clinic_name }}<br />
+                {{ clinic_address }} · {{ clinic_email }}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

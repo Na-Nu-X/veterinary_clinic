@@ -1,0 +1,27 @@
+{% autoescape off %}Nová online objednávka č. {{ booking.pk }} (prijatá {{ booking.created_at|date:"j. n. Y H:i" }})
+
+ZVIERATKO
+Druh:      {{ species_label }}
+Meno:      {{ booking.pet_name }}
+Vek:       {{ booking.pet_age|default:"neuvedený" }}
+
+NÁVŠTEVA
+Dôvod:     {{ reason_label }}
+Služba:    {% if service %}{{ service.name }}{% else %}neuvedená{% endif %}
+Oddelenie: {{ booking.department|default:"neuvedené" }}
+Lekár:     {{ vet_label }}
+Termín:    {{ preferred_date_label }}, {{ time_slot_label }}
+
+MAJITEĽ
+Meno:      {{ booking.owner_name }}
+Telefón:   {{ booking.phone }}
+E-mail:    {{ booking.email }}
+
+POZNÁMKA
+{{ booking.notes|default:"—" }}
+
+Potvrďte termín majiteľovi a zmeňte stav objednávky v administrácii:
+{{ admin_url }}
+
+Na tento e-mail môžete odpovedať – odpoveď pôjde priamo majiteľovi.
+{% endautoescape %}

@@ -71,6 +71,7 @@ Receptionists and veterinarians can manage:
 | POST | `/api/appointments/` | Online booking (validated: phone, e-mail, date not in past / ≤ 6 months / not Sunday, GDPR consent, service ↔ department consistency) |
 | POST | `/api/prescriptions/` | Repeat prescription / antiparasitics / diet request |
 
+Each new booking triggers two e-mails (see [E-mail notifications](#e-mail-notifications)).
 POST endpoints are write-only and throttled (`API_SUBMISSION_THROTTLE`,
 default 20/hour per IP). Validation messages are returned in Slovak.
 
@@ -79,6 +80,30 @@ Example:
 ```bash
 curl "http://localhost:8000/api/services/?department=stomatologia&ordering=price_from"
 ```
+
+---
+
+## E-mail notifications
+
+Every successful `POST /api/appointments/` sends, after the booking is committed:
+
+1. **Confirmation of receipt to the pet owner** – Slovak plain-text + branded HTML
+   e-mail with the booking summary, the service's preparation notes, how to
+   reschedule and the emergency line. `Reply-To` is the clinic's address.
+2. **Notification to the clinic** – sent to every inbox in
+   `CLINIC_NOTIFICATION_EMAILS`, with all details and a direct link to the
+   booking in `/admin`. `Reply-To` is the owner, so staff can answer directly.
+
+**Development:** the default `EMAIL_BACKEND` is Django's console backend, so the
+e-mails are printed to the `runserver` output and nothing needs SMTP.
+**Production:** set `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend`
+and `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`,
+`EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL` (see `backend/.env.example`).
+
+If sending fails (e.g. the SMTP server is down), the error is logged under the
+`clinic.notifications` logger and the booking is still saved and returned as
+`201`. Code: `backend/clinic/notifications.py`; templates:
+`backend/clinic/templates/clinic/emails/`.
 
 ---
 
@@ -120,7 +145,10 @@ frontend/src/
    (emitted as CSS custom properties on `:root`).
 3. **`frontend/src/index.html`** + **`frontend/public/favicon.svg`** – default
    `<title>`, meta description, theme colour, favicon.
-4. Clinic content (departments, services, prices, doctors) – via `/admin`, or
+4. **`backend/.env`** – `CLINIC_NAME`, `CLINIC_PHONE`, `CLINIC_EMERGENCY_PHONE`,
+   `CLINIC_ADDRESS`, `CLINIC_REPLY_TO_EMAIL`, `CLINIC_NOTIFICATION_EMAILS`,
+   `DEFAULT_FROM_EMAIL` used in notification e-mails.
+5. Clinic content (departments, services, prices, doctors) – via `/admin`, or
    adapt `backend/clinic/management/commands/seed_data.py`.
 
 ---
@@ -130,6 +158,8 @@ frontend/src/
 - Set `DJANGO_DEBUG=False`, a strong `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`
   and `DATABASE_URL=postgres://…` (install a driver, e.g. `pip install "psycopg[binary]"`).
 - Set `CORS_ALLOWED_ORIGINS` / `CSRF_TRUSTED_ORIGINS` to the public frontend origin.
+- Configure SMTP (`EMAIL_*`, `DEFAULT_FROM_EMAIL`), the staff inboxes
+  (`CLINIC_NOTIFICATION_EMAILS`) and `BACKEND_BASE_URL` (used for admin links).
 - `python manage.py collectstatic` and serve `backend/staticfiles/` (admin assets).
 - `ng build` outputs to `frontend/dist/frontend/browser`; serve it with SPA
   fallback to `index.html`. The production build calls the API at the same
