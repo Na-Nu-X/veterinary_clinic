@@ -1,0 +1,267 @@
+<header class="page-header">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Omrvinková navigácia">
+      <a routerLink="/">Domov</a><span aria-hidden="true">/</span><span>Pohotovosť a kontakt</span>
+    </nav>
+    <h1>Pohotovosť, recepty a kontakt</h1>
+    <p class="lead">
+      Keď ide o zdravie vášho miláčika, nemusíte nič riešiť sami. Sme tu nonstop na telefóne a cez deň na klinike.
+    </p>
+
+    <div class="quick-actions">
+      <a class="quick quick--emergency" [href]="config.contact.emergencyPhoneHref">
+        <span class="quick__icon"><app-icon name="siren" [size]="26" /></span>
+        <span>
+          <small>Nonstop pohotovostná linka</small>
+          <strong class="phone">{{ config.contact.emergencyPhone }}</strong>
+        </span>
+        <app-icon name="arrow-right" [size]="20" class="quick__arrow" />
+      </a>
+      <a class="quick" [href]="config.contact.phoneHref">
+        <span class="quick__icon"><app-icon name="phone" [size]="24" /></span>
+        <span>
+          <small>Recepcia · {{ status.label }}</small>
+          <strong class="phone">{{ config.contact.phone }}</strong>
+        </span>
+        <app-icon name="arrow-right" [size]="20" class="quick__arrow" />
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ================= EMERGENCY ================= -->
+<section class="section" id="pohotovost" aria-labelledby="emergency-title">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow eyebrow--accent"><app-icon name="siren" [size]="16" /> Pohotovosť</span>
+      <h2 id="emergency-title">Kedy vyhľadať okamžitú pomoc</h2>
+      <p class="lead">Ak spozorujete niektorý z týchto príznakov, nečakajte na bežný termín a volajte nám ihneď.</p>
+    </div>
+
+    <div class="flags">
+      @for (f of redFlags; track f.title) {
+        <div class="flag">
+          <span class="flag__icon"><app-icon [name]="f.icon" [size]="22" /></span>
+          <h3 class="h4">{{ f.title }}</h3>
+          <p>{{ f.text }}</p>
+        </div>
+      }
+    </div>
+
+    <div class="protocol">
+      <div class="protocol__intro">
+        <h3>Ako postupovať pri akútnom stave</h3>
+        <p class="muted">{{ config.contact.emergencyNote }}</p>
+        <a class="btn btn--accent btn--lg" [href]="config.contact.emergencyPhoneHref">
+          <app-icon name="phone" [size]="18" />
+          Volať <span class="phone">{{ config.contact.emergencyPhone }}</span>
+        </a>
+      </div>
+      <ol class="protocol__steps">
+        @for (s of emergencySteps; track s.title; let i = $index) {
+          <li>
+            <span class="protocol__num tabular">{{ i + 1 }}</span>
+            <div>
+              <h4>{{ s.title }}</h4>
+              <p class="muted">{{ s.text }}</p>
+            </div>
+          </li>
+        }
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONTACT & DIRECTIONS ================= -->
+<section class="section section--soft" id="kontakt" aria-labelledby="contact-title">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Kontakt a príchod</span>
+      <h2 id="contact-title">Kde nás nájdete</h2>
+    </div>
+
+    <div class="contact-grid">
+      <div class="map card">
+        <iframe
+          [src]="mapUrl"
+          title="Mapa s polohou kliniky"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        ></iframe>
+        <a class="map__link" [href]="config.address.mapUrl" target="_blank" rel="noopener">
+          <app-icon name="map-pin" [size]="16" /> Otvoriť navigáciu
+        </a>
+      </div>
+
+      <div class="contact-cards">
+        <div class="card info">
+          <h3 class="h4"><app-icon name="map-pin" [size]="18" /> Adresa</h3>
+          <address>
+            {{ config.brand.name }}<br />
+            {{ config.address.street }}<br />
+            {{ config.address.postalCode }} {{ config.address.city }}
+          </address>
+          <p class="info__row"><app-icon name="mail" [size]="16" /><a [href]="'mailto:' + config.contact.email">{{ config.contact.email }}</a></p>
+          <p class="info__row"><app-icon name="phone" [size]="16" /><a class="phone" [href]="config.contact.phoneHref">{{ config.contact.phone }}</a></p>
+        </div>
+
+        <div class="card info">
+          <h3 class="h4"><app-icon name="car" [size]="18" /> Parkovanie</h3>
+          <p>{{ config.address.parking }}</p>
+          <h3 class="h4"><app-icon name="bus" [size]="18" /> MHD</h3>
+          <p>{{ config.address.publicTransport }}</p>
+        </div>
+
+        <div class="card info">
+          <h3 class="h4"><app-icon name="clock" [size]="18" /> Ordinačné hodiny</h3>
+          <dl class="hours">
+            @for (row of config.openingHours; track row.days; let i = $index) {
+              <div [class.is-today]="i === status.todayIndex">
+                <dt>
+                  {{ row.days }}
+                  @if (i === status.todayIndex) {
+                    <span class="badge" [class.badge--accent]="!status.isOpen">Dnes</span>
+                  }
+                </dt>
+                <dd class="tabular">{{ row.hours }}</dd>
+              </div>
+            }
+          </dl>
+          <p class="muted small">Mimo ordinačných hodín je k dispozícii nonstop pohotovostná linka.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRESCRIPTIONS ================= -->
+<section class="section" id="recepty" aria-labelledby="rx-title">
+  <div class="container rx">
+    <div class="rx__intro">
+      <span class="eyebrow">Pre našich klientov</span>
+      <h2 id="rx-title">Žiadosť o recept, antiparazitiká alebo diétne krmivo</h2>
+      <p class="lead">
+        Pre zvieratká v našej starostlivosti pripravíme opakovaný recept či objednáme veterinárnu diétu. Stačí
+        vyplniť formulár – ozveme sa, keď bude všetko pripravené na vyzdvihnutie.
+      </p>
+      <ul class="check-list">
+        <li>Žiadosti vybavujeme spravidla do 24 hodín v pracovné dni.</li>
+        <li>Lieky na predpis vydávame len pacientom vyšetreným za posledných 12 mesiacov.</li>
+        <li>Veterinárne diéty máme väčšinou skladom, inak ich objednáme do 2 dní.</li>
+      </ul>
+    </div>
+
+    <div class="rx__form card">
+      @if (result(); as r) {
+        <div class="rx__success" role="status">
+          <span class="rx__success-icon"><app-icon name="check" [size]="32" [strokeWidth]="2.5" /></span>
+          <h3>Žiadosť sme prijali</h3>
+          <p class="muted">
+            {{ typeLabel(r.request_type) }} pre <strong>{{ r.pet_name }}</strong>. Keď bude pripravená na vyzdvihnutie,
+            zavoláme vám na <span class="tabular">{{ r.phone }}</span> alebo napíšeme na {{ r.email }}.
+          </p>
+          <button type="button" class="btn btn--outline" (click)="newRequest()">Odoslať ďalšiu žiadosť</button>
+        </div>
+      } @else {
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          @if (serverMessage(); as msg) {
+            <div class="alert alert--error" role="alert">
+              <app-icon name="alert-triangle" />
+              <div>{{ msg }}</div>
+            </div>
+          }
+
+          <fieldset class="field rx__fieldset">
+            <legend class="field__label">Čo potrebujete?</legend>
+            <div class="rx__types">
+              @for (o of typeOptions; track o.value) {
+                <label class="choice">
+                  <input type="radio" formControlName="request_type" [value]="o.value" (change)="clearServerError('request_type')" />
+                  <app-icon [name]="o.icon ?? 'pill'" [size]="20" />
+                  {{ o.label }}
+                </label>
+              }
+            </div>
+            @if (error('request_type'); as e) {
+              <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+            }
+          </fieldset>
+
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label" for="rx_species">Druh zvieratka</label>
+              <select id="rx_species" class="select" formControlName="pet_species">
+                @for (o of speciesOptions; track o.value) {
+                  <option [value]="o.value">{{ o.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label class="field__label" for="rx_pet">Meno zvieratka</label>
+              <input id="rx_pet" class="input" formControlName="pet_name" autocomplete="off" [attr.aria-invalid]="!!error('pet_name')" (input)="clearServerError('pet_name')" />
+              @if (error('pet_name'); as e) {
+                <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+              }
+            </div>
+            <div class="field field--full">
+              <label class="field__label" for="rx_items">Názov lieku / krmiva a množstvo</label>
+              <textarea
+                id="rx_items"
+                class="textarea"
+                formControlName="item_details"
+                rows="3"
+                placeholder="napr. Renal diéta pre mačky 2 kg, alebo Vetmedin 5 mg – 1 balenie"
+                [attr.aria-invalid]="!!error('item_details')"
+                (input)="clearServerError('item_details')"
+              ></textarea>
+              @if (error('item_details'); as e) {
+                <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+              }
+            </div>
+            <div class="field field--full">
+              <label class="field__label" for="rx_owner">Meno a priezvisko majiteľa</label>
+              <input id="rx_owner" class="input" formControlName="owner_name" autocomplete="name" [attr.aria-invalid]="!!error('owner_name')" (input)="clearServerError('owner_name')" />
+              @if (error('owner_name'); as e) {
+                <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+              }
+            </div>
+            <div class="field">
+              <label class="field__label" for="rx_phone">Telefón</label>
+              <input id="rx_phone" type="tel" class="input tabular" formControlName="phone" autocomplete="tel" placeholder="+421 900 123 456" [attr.aria-invalid]="!!error('phone')" (input)="clearServerError('phone')" />
+              @if (error('phone'); as e) {
+                <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+              }
+            </div>
+            <div class="field">
+              <label class="field__label" for="rx_email">E-mail</label>
+              <input id="rx_email" type="email" class="input" formControlName="email" autocomplete="email" placeholder="meno@domena.sk" [attr.aria-invalid]="!!error('email')" (input)="clearServerError('email')" />
+              @if (error('email'); as e) {
+                <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+              }
+            </div>
+            <div class="field field--full">
+              <label class="checkbox">
+                <input type="checkbox" formControlName="gdpr_consent" [attr.aria-invalid]="!!error('gdpr_consent')" />
+                <span>
+                  Súhlasím so spracovaním osobných údajov na účel vybavenia žiadosti v zmysle
+                  <a routerLink="/ochrana-osobnych-udajov" target="_blank">zásad ochrany osobných údajov</a>.
+                </span>
+              </label>
+              @if (error('gdpr_consent'); as e) {
+                <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+              }
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn--lg btn--block rx__submit" [disabled]="submitting()">
+            @if (submitting()) {
+              Odosielame…
+            } @else {
+              <app-icon name="file-text" [size]="18" /> Odoslať žiadosť
+            }
+          </button>
+        </form>
+      }
+    </div>
+  </div>
+</section>
