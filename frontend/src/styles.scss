@@ -1,0 +1,8 @@
+// Global stylesheet – composes the modular design system.
+@use 'styles/variables' as vars;
+@use 'styles/base';
+@use 'styles/typography';
+@use 'styles/buttons';
+@use 'styles/forms';
+
+@include vars.emit-root-tokens;

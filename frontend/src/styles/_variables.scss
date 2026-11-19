@@ -1,0 +1,112 @@
+// ---------------------------------------------------------------------------
+// Design tokens (SCSS layer).
+// Runtime theming happens through the CSS custom properties emitted in
+// `:root` below – override them per client to rebrand the whole site.
+// ---------------------------------------------------------------------------
+
+// Brand palette
+$color-bg: #f9faf8; // Warm Alabaster
+$color-surface-soft: #eef3f0; // Eucalyptus Mist
+$color-surface: #ffffff;
+$color-border: #dce4df;
+$color-border-strong: #c3d0c8;
+$color-text: #16211e; // Deep Forest Charcoal
+$color-text-muted: #4b5b56;
+$color-primary: #164e46; // Deep Medical Teal
+$color-primary-hover: #0f3a34;
+$color-primary-soft: #dcebe6;
+$color-accent: #c86d51; // Muted Terracotta
+$color-accent-strong: #a9543b;
+$color-accent-soft: #f8e9e3;
+$color-amber: #9a6a12;
+$color-amber-soft: #fbf1dc;
+$color-success: #1f6b4f;
+$color-danger: #b0412e;
+
+// Typography
+$font-serif: 'Fraunces', 'Iowan Old Style', 'Georgia', serif;
+$font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+// Spacing scale (4px base)
+$space: (
+  0: 0,
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 0.75rem,
+  4: 1rem,
+  5: 1.25rem,
+  6: 1.5rem,
+  8: 2rem,
+  10: 2.5rem,
+  12: 3rem,
+  16: 4rem,
+  20: 5rem,
+  24: 6rem,
+);
+
+// Radii
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 24px;
+$radius-pill: 999px;
+
+// Layout
+$container-max: 1200px;
+$container-narrow: 800px;
+$header-height: 76px;
+
+// Breakpoints (mobile-first, min-width)
+$breakpoints: (
+  sm: 576px,
+  md: 768px,
+  lg: 1024px,
+  xl: 1280px,
+);
+
+// Motion
+$ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+$duration-fast: 160ms;
+$duration-base: 240ms;
+
+@mixin emit-root-tokens {
+  :root {
+    --color-bg: #{$color-bg};
+    --color-surface-soft: #{$color-surface-soft};
+    --color-surface: #{$color-surface};
+    --color-border: #{$color-border};
+    --color-border-strong: #{$color-border-strong};
+    --color-text: #{$color-text};
+    --color-text-muted: #{$color-text-muted};
+    --color-primary: #{$color-primary};
+    --color-primary-hover: #{$color-primary-hover};
+    --color-primary-soft: #{$color-primary-soft};
+    --color-on-primary: #ffffff;
+    --color-accent: #{$color-accent};
+    --color-accent-strong: #{$color-accent-strong};
+    --color-accent-soft: #{$color-accent-soft};
+    --color-amber: #{$color-amber};
+    --color-amber-soft: #{$color-amber-soft};
+    --color-success: #{$color-success};
+    --color-danger: #{$color-danger};
+
+    --font-serif: #{$font-serif};
+    --font-sans: #{$font-sans};
+
+    --radius-sm: #{$radius-sm};
+    --radius-md: #{$radius-md};
+    --radius-lg: #{$radius-lg};
+    --radius-xl: #{$radius-xl};
+    --radius-pill: #{$radius-pill};
+
+    --shadow-xs: 0 1px 2px rgb(22 33 30 / 0.05);
+    --shadow-sm: 0 1px 2px rgb(22 33 30 / 0.04), 0 4px 12px rgb(22 33 30 / 0.05);
+    --shadow-md: 0 2px 4px rgb(22 33 30 / 0.04), 0 12px 32px rgb(22 33 30 / 0.08);
+    --shadow-lg: 0 4px 8px rgb(22 33 30 / 0.04), 0 24px 56px rgb(22 33 30 / 0.12);
+
+    --header-height: #{$header-height};
+    --container-max: #{$container-max};
+    --ease-out: #{$ease-out};
+    --focus-ring: 0 0 0 3px rgb(22 78 70 / 0.28);
+  }
+}
