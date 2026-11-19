@@ -45,8 +45,13 @@ class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        return Department.objects.annotate(services_count=Count("services")).prefetch_related(
+        # Meta.ordering is ignored for aggregate (GROUP BY) queries, so order explicitly.
+        return (
+            Department.objects.annotate(services_count=Count("services"))
+            .order_by("display_order", "name")
+            .prefetch_related(
             Prefetch("services", queryset=VeterinaryService.objects.order_by("display_order", "name"))
+            )
         )
 
 

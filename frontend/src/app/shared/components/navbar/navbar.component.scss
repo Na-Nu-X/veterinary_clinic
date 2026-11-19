@@ -213,6 +213,25 @@
   }
 }
 
+.header__sos {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-strong);
+
+  &:hover {
+    background: var(--color-accent);
+    color: #fff;
+  }
+
+  @include up(lg) {
+    display: none;
+  }
+}
+
 .header__burger {
   display: grid;
   place-items: center;

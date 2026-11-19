@@ -51,6 +51,13 @@
         <app-icon name="calendar" [size]="17" />
         Objednať sa online
       </a>
+      <a
+        class="header__sos"
+        [href]="config.contact.emergencyPhoneHref"
+        [attr.aria-label]="'Nonstop pohotovosť: ' + config.contact.emergencyPhone"
+      >
+        <app-icon name="siren" [size]="20" />
+      </a>
       <button
         type="button"
         class="header__burger"

@@ -33,6 +33,8 @@ class ClinicApiTests(APITestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(len(res.data), 6)
         self.assertTrue(all(d["services_count"] == len(d["services"]) for d in res.data))
+        orders = [d["display_order"] for d in res.data]
+        self.assertEqual(orders, sorted(orders))
 
     def test_service_filters(self):
         self.assertEqual(len(self.client.get("/api/services/").data), 15)

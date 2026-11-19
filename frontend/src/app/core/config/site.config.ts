@@ -153,7 +153,7 @@ export const SITE_CONFIG: SiteConfig = {
       author: 'Marek a Zuzana K.',
       pet: 'kocúr Oskar',
       text:
-        'Oskar z ciest k veterinárovi vždy panikáril. Oddelená mačacia čakáreň a trpezlivá MVDr. Bieliková sú pre nás zázrak – ' +
+        'Oskar bol u veterinára vždy vystresovaný. Oddelená mačacia čakáreň a trpezlivá MVDr. Bieliková sú pre nás zázrak – ' +
         'prvýkrát odchádzal pokojný.',
       rating: 5,
       source: 'Google recenzie',
