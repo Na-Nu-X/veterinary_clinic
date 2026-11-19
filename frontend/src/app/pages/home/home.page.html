@@ -1,0 +1,310 @@
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <div class="container hero__inner">
+    <div class="hero__copy">
+      <span class="eyebrow">
+        <app-icon name="heart" [size]="16" [strokeWidth]="2" />
+        Veterinárna klinika a nemocnica · {{ config.address.city }}
+      </span>
+      <h1>Odborná starostlivosť <em class="accent">s pokojom</em> a ľudským prístupom</h1>
+      <p class="lead">
+        Moderná diagnostika, skúsení lekári a čas na vaše otázky. Postaráme sa o psov, mačky aj drobné
+        cicavce – od prvého očkovania až po náročné zákroky.
+      </p>
+
+      <div class="hero__ctas">
+        <a routerLink="/objednat-sa" class="btn btn--lg">
+          <app-icon name="calendar" [size]="18" />
+          Objednať sa online
+        </a>
+        <a routerLink="/pohotovost-a-kontakt" fragment="pohotovost" class="btn btn--lg btn--outline-accent">
+          <app-icon name="siren" [size]="18" />
+          Akútny stav / Pohotovosť
+        </a>
+      </div>
+
+      <ul role="list" class="hero__meta">
+        <li>
+          <span class="status-dot" [class.is-open]="status.isOpen" aria-hidden="true"></span>
+          {{ status.label }}
+        </li>
+        <li>
+          <app-icon name="check-circle" [size]="16" />
+          Termín potvrdíme do 2 hodín
+        </li>
+      </ul>
+    </div>
+
+    <div class="hero__visual">
+      <div class="hero__image">
+        <img
+          [src]="heroImage"
+          alt="Veterinárna lekárka jemne vyšetruje mačku"
+          width="1100"
+          height="1300"
+          fetchpriority="high"
+        />
+      </div>
+      <div class="hero__float hero__float--lab">
+        <span class="hero__float-icon"><app-icon name="flask" [size]="20" /></span>
+        <span>
+          <strong class="tabular">15 min</strong>
+          <small>výsledky krvi z vlastného laboratória</small>
+        </span>
+      </div>
+      <div class="hero__float hero__float--rating">
+        <span class="hero__stars" aria-hidden="true">
+          @for (s of stars; track s) {
+            <app-icon name="star" [size]="14" [filled]="true" />
+          }
+        </span>
+        <span>
+          <strong class="tabular">4,9 / 5</strong>
+          <small>z 380+ overených recenzií</small>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <dl class="metrics">
+      @for (m of config.trustMetrics; track m.label) {
+        <div class="metrics__item">
+          <dt>{{ m.label }}</dt>
+          <dd class="tabular">{{ m.value }}</dd>
+        </div>
+      }
+    </dl>
+  </div>
+</section>
+
+<!-- ===================== DEPARTMENTS ===================== -->
+<section class="section" aria-labelledby="departments-title">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="eyebrow">Komplexná starostlivosť pod jednou strechou</span>
+        <h2 id="departments-title">Naše odborné oddelenia</h2>
+      </div>
+      <a routerLink="/sluzby" class="link-arrow">Všetky služby a cenník <app-icon name="arrow-right" [size]="16" /></a>
+    </div>
+
+    @if (store.loading()) {
+      <div class="departments">
+        <div class="departments__list">
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            <div class="skeleton" style="height: 76px"></div>
+          }
+        </div>
+        <div class="skeleton" style="min-height: 360px"></div>
+      </div>
+    } @else if (store.error()) {
+      <div class="alert alert--error" role="alert">
+        <app-icon name="alert-triangle" />
+        <div>
+          Oddelenia sa nepodarilo načítať. <button type="button" class="link-btn" (click)="store.retry()">Skúsiť znova</button>
+        </div>
+      </div>
+    } @else {
+      <div class="departments">
+        <div class="departments__list" role="tablist" aria-label="Oddelenia kliniky">
+          @for (d of store.departments(); track d.id) {
+            <button
+              type="button"
+              role="tab"
+              class="dept-tab"
+              [class.is-active]="selectedDepartment()?.id === d.id"
+              [attr.aria-selected]="selectedDepartment()?.id === d.id"
+              [attr.aria-controls]="'dept-panel'"
+              (click)="selectDepartment(d.slug)"
+              (mouseenter)="selectDepartment(d.slug)"
+            >
+              <span class="dept-tab__icon"><app-icon [name]="d.icon_name" [size]="22" /></span>
+              <span class="dept-tab__text">
+                <strong>{{ d.name }}</strong>
+                <small>{{ d.services_count }} {{ d.services_count === 1 ? 'služba' : d.services_count < 5 ? 'služby' : 'služieb' }}</small>
+              </span>
+              <app-icon name="chevron-right" [size]="18" class="dept-tab__chevron" />
+            </button>
+          }
+        </div>
+
+        @if (selectedDepartment(); as dept) {
+          <div class="dept-panel" id="dept-panel" role="tabpanel">
+            <div class="dept-panel__head">
+              <span class="dept-panel__icon"><app-icon [name]="dept.icon_name" [size]="28" /></span>
+              <h3>{{ dept.name }}</h3>
+              <p class="muted">{{ dept.short_summary }}</p>
+            </div>
+            <ul role="list" class="dept-panel__services">
+              @for (s of dept.services; track s.id) {
+                <li>
+                  <a [routerLink]="['/sluzby', s.slug]">
+                    <span class="dept-panel__name">{{ s.name }}</span>
+                    <span class="dept-panel__meta tabular">
+                      <span>{{ s.duration_minutes | duration }}</span>
+                      <strong class="price">od {{ s.price_from | eur }}</strong>
+                    </span>
+                  </a>
+                </li>
+              }
+            </ul>
+            <div class="dept-panel__actions">
+              <a class="btn" routerLink="/sluzby" [queryParams]="{ oddelenie: dept.slug }">
+                Zobraziť oddelenie <app-icon name="arrow-right" [size]="16" />
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</section>
+
+<!-- ===================== STANDARDS ===================== -->
+<section class="section section--soft" aria-labelledby="standards-title">
+  <div class="container standards">
+    <div class="standards__visual">
+      <img [src]="standardsImage" alt="Pes a mačka spolu odpočívajú v tráve" loading="lazy" width="1000" height="1100" />
+      <div class="standards__badge">
+        <app-icon name="shield-check" [size]="22" />
+        <span>Člen Komory veterinárnych lekárov SR</span>
+      </div>
+    </div>
+    <div class="standards__content">
+      <span class="eyebrow">Naše štandardy</span>
+      <h2 id="standards-title">Prečo zveriť miláčika nám</h2>
+      <p class="lead">
+        Investujeme do vybavenia, ktoré skracuje čakanie na diagnózu, a do prostredia, v ktorom sa zvieratá
+        aj ich majitelia cítia bezpečne.
+      </p>
+      <ul role="list" class="standards__list">
+        @for (s of standards; track s.title) {
+          <li>
+            <span class="standards__icon"><app-icon [name]="s.icon" [size]="22" /></span>
+            <div>
+              <h3 class="h4">{{ s.title }}</h3>
+              <p class="muted">{{ s.text }}</p>
+            </div>
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TRIAGE ===================== -->
+<section class="section" aria-labelledby="triage-title" id="poradca">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <span class="eyebrow">Poradca pre majiteľov</span>
+      <h2 id="triage-title">Ako rýchlo by mal byť váš miláčik vyšetrený?</h2>
+      <p class="lead">Vyberte zvieratko a situáciu. Pokojne a prehľadne vám poradíme, čo robiť ďalej.</p>
+    </div>
+    <app-symptom-triage-widget />
+  </div>
+</section>
+
+<!-- ===================== FEATURED SERVICES ===================== -->
+<section class="section section--soft" aria-labelledby="featured-title">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="eyebrow">Najčastejšie vyšetrenia</span>
+        <h2 id="featured-title">S čím vám najčastejšie pomáhame</h2>
+      </div>
+      <a routerLink="/sluzby" class="link-arrow">Celý cenník <app-icon name="arrow-right" [size]="16" /></a>
+    </div>
+    <div class="grid-3">
+      @if (store.loading()) {
+        @for (i of [1, 2, 3]; track i) {
+          <div class="skeleton" style="height: 460px"></div>
+        }
+      } @else {
+        @for (s of featured(); track s.id) {
+          <app-service-card [service]="s" />
+        }
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TEAM ===================== -->
+<section class="section" aria-labelledby="team-title">
+  <div class="container">
+    <div class="section-head section-head--split">
+      <div>
+        <span class="eyebrow">Ľudia, ktorým môžete dôverovať</span>
+        <h2 id="team-title">Náš tím lekárov</h2>
+      </div>
+      <a routerLink="/nas-tim" class="link-arrow">Spoznajte celý tím <app-icon name="arrow-right" [size]="16" /></a>
+    </div>
+    <div class="team-grid">
+      @if (store.loading()) {
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="skeleton" style="aspect-ratio: 4 / 5.6"></div>
+        }
+      } @else {
+        @for (v of vets(); track v.id) {
+          <a class="vet" routerLink="/nas-tim" [fragment]="v.slug">
+            <div class="vet__photo">
+              <img [src]="v.photo_url" [alt]="v.full_name_with_titles" loading="lazy" width="600" height="720" />
+            </div>
+            <h3 class="vet__name">{{ v.full_name_with_titles }}</h3>
+            <p class="vet__role">{{ v.role }}</p>
+          </a>
+        }
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ===================== REVIEWS ===================== -->
+<section class="section section--soft" aria-labelledby="reviews-title">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <span class="eyebrow">Overené recenzie</span>
+      <h2 id="reviews-title">Čo hovoria majitelia našich pacientov</h2>
+    </div>
+    <div class="grid-3">
+      @for (r of config.reviews; track r.author) {
+        <figure class="review">
+          <div class="review__stars" [attr.aria-label]="'Hodnotenie ' + r.rating + ' z 5'">
+            @for (s of stars; track s) {
+              <app-icon name="star" [size]="16" [filled]="s <= r.rating" />
+            }
+          </div>
+          <blockquote>„{{ r.text }}“</blockquote>
+          <figcaption>
+            <span class="review__avatar" aria-hidden="true">{{ r.author.charAt(0) }}</span>
+            <span>
+              <strong>{{ r.author }}</strong>
+              <small>{{ r.pet }} · {{ r.source }}</small>
+            </span>
+          </figcaption>
+        </figure>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<section class="section section--tight">
+  <div class="container">
+    <div class="cta-band">
+      <div>
+        <h2>Objednajte svojho miláčika online</h2>
+        <p>Vyplnenie trvá približne 2 minúty. {{ config.booking.confirmationNote }}</p>
+      </div>
+      <div class="cta-band__actions">
+        <a routerLink="/objednat-sa" class="btn btn--light btn--lg">
+          <app-icon name="calendar" [size]="18" />
+          Objednať sa online
+        </a>
+        <a [href]="config.contact.phoneHref" class="cta-band__phone">
+          alebo volajte <strong class="phone">{{ config.contact.phone }}</strong>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

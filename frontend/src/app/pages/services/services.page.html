@@ -1,0 +1,159 @@
+<header class="page-header">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Omrvinková navigácia">
+      <a routerLink="/">Domov</a><span aria-hidden="true">/</span><span>Služby a cenník</span>
+    </nav>
+    <h1>Služby a orientačný cenník</h1>
+    <p class="lead">
+      Prehľad vyšetrení a zákrokov, ktoré na klinike poskytujeme. Pri každej službe nájdete orientačnú cenu,
+      dĺžku návštevy a pokyny, ako zvieratko pripraviť.
+    </p>
+  </div>
+</header>
+
+<section class="section section--tight">
+  <div class="container">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <label class="toolbar__search">
+        <span class="visually-hidden">Hľadať službu</span>
+        <app-icon name="search" [size]="20" />
+        <input
+          type="search"
+          class="input"
+          placeholder="Hľadať, napr. očkovanie, ultrazvuk, zuby…"
+          [value]="search()"
+          (input)="onSearch($event)"
+          autocomplete="off"
+        />
+      </label>
+      <label class="toolbar__sort">
+        <span class="visually-hidden">Zoradiť</span>
+        <select class="select" [value]="sort()" (change)="onSort($event)">
+          @for (o of sortOptions; track o.value) {
+            <option [value]="o.value">{{ o.label }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="chips" role="group" aria-label="Filtrovať podľa oddelenia">
+      <button type="button" class="chip" [class.is-active]="!activeDepartment()" (click)="setDepartment(null)">
+        Všetky oddelenia
+      </button>
+      @for (d of store.departments(); track d.id) {
+        <button
+          type="button"
+          class="chip"
+          [class.is-active]="activeDepartment()?.id === d.id"
+          [attr.aria-pressed]="activeDepartment()?.id === d.id"
+          (click)="setDepartment(d.slug)"
+        >
+          <app-icon [name]="d.icon_name" [size]="16" />
+          {{ d.name }}
+        </button>
+      }
+    </div>
+
+    <div class="results-bar">
+      <p class="muted small" aria-live="polite">
+        @if (!store.loading()) {
+          Zobrazujeme <strong class="tabular">{{ resultLabel() }}</strong>
+          @if (activeDepartment(); as d) { v oddelení <strong>{{ d.name }}</strong> }
+        }
+      </p>
+      <p class="muted small price-note">
+        <app-icon name="info" [size]="16" /> Ceny sú orientačné a zahŕňajú DPH. Konečná suma závisí od hmotnosti
+        zvieratka a rozsahu ošetrenia.
+      </p>
+    </div>
+
+    <!-- Results -->
+    @if (store.loading()) {
+      <div class="price-list">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="skeleton" style="height: 120px; margin-bottom: 0.75rem"></div>
+        }
+      </div>
+    } @else if (store.error()) {
+      <div class="alert alert--error" role="alert">
+        <app-icon name="alert-triangle" />
+        <div>
+          Cenník sa nepodarilo načítať.
+          <button type="button" class="link-btn" (click)="store.retry()">Skúsiť znova</button>
+        </div>
+      </div>
+    } @else if (groups().length === 0) {
+      <div class="empty-state">
+        <app-icon name="search" [size]="32" />
+        <h2 class="h3">Nenašli sme žiadnu službu</h2>
+        <p>Skúste iné slovo alebo zrušte filter. Radi vám poradíme aj telefonicky.</p>
+        <button type="button" class="btn btn--outline btn--sm" (click)="clearFilters()">Zrušiť filtre</button>
+      </div>
+    } @else {
+      @for (group of groups(); track group.department.id) {
+        <section class="dept-group" [attr.aria-labelledby]="'dept-' + group.department.slug">
+          <header class="dept-group__head">
+            <span class="dept-group__icon"><app-icon [name]="group.department.icon_name" [size]="24" /></span>
+            <div>
+              <h2 class="h3" [id]="'dept-' + group.department.slug">{{ group.department.name }}</h2>
+              <p class="muted small">{{ group.department.short_summary }}</p>
+            </div>
+          </header>
+
+          <ul role="list" class="price-list">
+            @for (s of group.services; track s.id) {
+              <li class="price-row" [class.is-open]="expanded().has(s.id)">
+                <div class="price-row__main">
+                  <div class="price-row__info">
+                    <h3 class="price-row__title">
+                      <a [routerLink]="['/sluzby', s.slug]">{{ s.name }}</a>
+                      @if (s.is_featured) {
+                        <span class="badge badge--accent">Často vyhľadávané</span>
+                      }
+                    </h3>
+                    <p class="muted">{{ s.short_description }}</p>
+                  </div>
+                  <div class="price-row__side">
+                    <span class="badge badge--neutral tabular">
+                      <app-icon name="clock" [size]="14" [strokeWidth]="2" />
+                      {{ s.duration_minutes | duration }}
+                    </span>
+                    <span class="price-row__price price"><small>od</small> {{ s.price_from | eur }}</span>
+                  </div>
+                </div>
+
+                <div class="price-row__actions">
+                  @if (s.preparation_notes) {
+                    <button
+                      type="button"
+                      class="prep-toggle"
+                      (click)="toggle(s.id)"
+                      [attr.aria-expanded]="expanded().has(s.id)"
+                      [attr.aria-controls]="'prep-' + s.id"
+                    >
+                      <app-icon name="file-text" [size]="16" />
+                      Ako sa pripraviť
+                      <app-icon name="chevron-down" [size]="16" class="prep-toggle__chevron" />
+                    </button>
+                  }
+                  <span class="price-row__links">
+                    <a class="link-arrow" [routerLink]="['/sluzby', s.slug]">Detail</a>
+                    <a class="btn btn--sm" routerLink="/objednat-sa" [queryParams]="{ service: s.slug }">Objednať</a>
+                  </span>
+                </div>
+
+                @if (expanded().has(s.id)) {
+                  <div class="prep" [id]="'prep-' + s.id">
+                    <app-icon name="info" [size]="18" />
+                    <p>{{ s.preparation_notes }}</p>
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+  </div>
+</section>

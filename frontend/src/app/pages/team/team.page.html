@@ -1,0 +1,97 @@
+<header class="page-header">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Omrvinková navigácia">
+      <a routerLink="/">Domov</a><span aria-hidden="true">/</span><span>Náš tím</span>
+    </nav>
+    <h1>Lekári, ktorí si na vás nájdu čas</h1>
+    <p class="lead">
+      Každý z nás sa ďalej vzdeláva vo svojej špecializácii, no spája nás jedno: pokojný prístup, zrozumiteľné
+      vysvetlenie a rešpekt k vám aj k vášmu zvieratku.
+    </p>
+  </div>
+</header>
+
+<section class="section section--tight">
+  <div class="container">
+    @if (store.loading()) {
+      <div class="team">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="skeleton" style="height: 420px"></div>
+        }
+      </div>
+    } @else if (store.error()) {
+      <div class="alert alert--error" role="alert">
+        <app-icon name="alert-triangle" />
+        <div>
+          Profily lekárov sa nepodarilo načítať.
+          <button type="button" class="link-btn" (click)="store.retry()">Skúsiť znova</button>
+        </div>
+      </div>
+    } @else {
+      <div class="team">
+        @for (v of store.veterinarians(); track v.id; let odd = $odd) {
+          <article class="profile" [id]="v.slug" [class.profile--reverse]="odd">
+            <div class="profile__photo">
+              <img [src]="v.photo_url" [alt]="v.full_name_with_titles" width="700" height="840" loading="lazy" />
+            </div>
+            <div class="profile__body">
+              <div class="profile__departments">
+                @for (d of v.departments; track d.id) {
+                  <span class="badge"><app-icon [name]="d.icon_name" [size]="14" [strokeWidth]="2" /> {{ d.name }}</span>
+                }
+              </div>
+              <h2 class="profile__name">{{ v.full_name_with_titles }}</h2>
+              <p class="profile__role">{{ v.role }}</p>
+              <p class="profile__bio">{{ v.bio }}</p>
+
+              @if (v.education_list.length) {
+                <div class="profile__edu">
+                  <h3 class="profile__edu-title">
+                    <app-icon name="graduation-cap" [size]="18" /> Vzdelanie a certifikáty
+                  </h3>
+                  <ul class="check-list">
+                    @for (e of v.education_list; track e) {
+                      <li>{{ e }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              <div class="profile__actions">
+                @if (v.accepts_online_booking) {
+                  <a class="btn" routerLink="/objednat-sa" [queryParams]="{ vet: v.slug }">
+                    <app-icon name="calendar" [size]="17" />
+                    Objednať k lekárovi
+                  </a>
+                } @else {
+                  <span class="badge badge--neutral">Objednanie len telefonicky</span>
+                }
+                <a class="btn btn--ghost" [href]="config.contact.phoneHref">
+                  <app-icon name="phone" [size]="16" /> Zavolať
+                </a>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</section>
+
+<section class="section section--soft" aria-labelledby="support-title">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Za každým ošetrením je celý tím</span>
+      <h2 id="support-title">Veterinárni technici a recepcia</h2>
+    </div>
+    <div class="grid-3">
+      @for (t of supportTeam; track t.title) {
+        <div class="card support">
+          <span class="support__icon"><app-icon [name]="t.icon" [size]="22" /></span>
+          <h3>{{ t.title }}</h3>
+          <p class="muted">{{ t.text }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>

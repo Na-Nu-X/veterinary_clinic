@@ -1,0 +1,208 @@
+@switch (state().status) {
+  @case ('loading') {
+    <header class="page-header">
+      <div class="container">
+        <div class="skeleton" style="height: 18px; width: 220px"></div>
+        <div class="skeleton" style="height: 56px; width: min(640px, 100%); margin-top: 1.25rem"></div>
+        <div class="skeleton" style="height: 24px; width: min(520px, 100%); margin-top: 1rem"></div>
+      </div>
+    </header>
+    <div class="container section--tight section">
+      <div class="skeleton" style="height: 420px"></div>
+    </div>
+  }
+
+  @case ('not-found') {
+    <section class="section">
+      <div class="container--narrow">
+        <div class="empty-state">
+          <app-icon name="search" [size]="36" />
+          <h1 class="h2">Toto vyšetrenie sme nenašli</h1>
+          <p>Služba mohla byť premenovaná alebo presunutá. Pozrite si, prosím, aktuálny cenník.</p>
+          <a routerLink="/sluzby" class="btn">Prejsť na služby a cenník</a>
+        </div>
+      </div>
+    </section>
+  }
+
+  @case ('error') {
+    <section class="section">
+      <div class="container--narrow">
+        <div class="alert alert--error" role="alert">
+          <app-icon name="alert-triangle" />
+          <div>
+            Detail vyšetrenia sa nepodarilo načítať.
+            <button type="button" class="link-btn" (click)="retry()">Skúsiť znova</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  }
+
+  @case ('ready') {
+    @if (service(); as s) {
+      <header class="page-header detail-header">
+        <div class="container detail-header__inner">
+          <div class="detail-header__copy">
+            <nav class="breadcrumb" aria-label="Omrvinková navigácia">
+              <a routerLink="/">Domov</a><span aria-hidden="true">/</span>
+              <a routerLink="/sluzby">Služby</a><span aria-hidden="true">/</span>
+              <a routerLink="/sluzby" [queryParams]="{ oddelenie: s.department.slug }">{{ s.department.name }}</a>
+            </nav>
+            <h1>{{ s.name }}</h1>
+            <p class="lead">{{ s.short_description }}</p>
+
+            <dl class="facts">
+              <div>
+                <dt><app-icon name="clock" [size]="16" /> Dĺžka návštevy</dt>
+                <dd class="tabular">{{ s.duration_minutes | duration }}</dd>
+              </div>
+              <div>
+                <dt><app-icon name="file-text" [size]="16" /> Orientačná cena</dt>
+                <dd class="price">od {{ s.price_from | eur }}</dd>
+              </div>
+              <div>
+                <dt><app-icon [name]="s.department.icon_name" [size]="16" /> Oddelenie</dt>
+                <dd>{{ s.department.name }}</dd>
+              </div>
+            </dl>
+
+            <div class="detail-header__ctas">
+              <a class="btn btn--lg" routerLink="/objednat-sa" [queryParams]="{ service: s.slug }">
+                <app-icon name="calendar" [size]="18" />
+                Objednať sa na toto vyšetrenie
+              </a>
+              <a class="btn btn--lg btn--ghost" [href]="config.contact.phoneHref">
+                <app-icon name="phone" [size]="18" />
+                <span class="phone">{{ config.contact.phone }}</span>
+              </a>
+            </div>
+          </div>
+
+          @if (s.image_url) {
+            <div class="detail-header__image">
+              <img [src]="s.image_url" alt="" width="800" height="600" />
+            </div>
+          }
+        </div>
+      </header>
+
+      <section class="section section--tight">
+        <div class="container detail-layout">
+          <article class="detail-article">
+            <section aria-labelledby="what-title">
+              <span class="eyebrow">Sprievodca pre majiteľov</span>
+              <h2 id="what-title" class="h3">Čo vyšetrenie obnáša</h2>
+              @for (p of s.detailed_description | paragraphs; track $index) {
+                <p>{{ p }}</p>
+              }
+            </section>
+
+            @if (s.preparation_notes) {
+              <section class="prep-box" aria-labelledby="prep-title">
+                <div class="prep-box__head">
+                  <span class="prep-box__icon"><app-icon name="file-text" [size]="22" /></span>
+                  <h2 id="prep-title" class="h3">Ako pripraviť zvieratko pred príchodom</h2>
+                </div>
+                <p>{{ s.preparation_notes }}</p>
+                @if (requiresFasting()) {
+                  <p class="prep-box__note">
+                    <app-icon name="alert-triangle" [size]="16" />
+                    Vyšetrenie si vyžaduje lačný žalúdok – termín si preto ideálne vyberte v dopoludňajších hodinách.
+                  </p>
+                }
+              </section>
+            }
+
+            <section aria-labelledby="faq-title">
+              <h2 id="faq-title" class="h3">Časté otázky</h2>
+              <div class="faq">
+                @for (f of faqs(); track f.q; let i = $index) {
+                  <div class="faq__item" [class.is-open]="openFaq() === i">
+                    <h3 class="faq__q">
+                      <button
+                        type="button"
+                        (click)="toggleFaq(i)"
+                        [attr.aria-expanded]="openFaq() === i"
+                        [attr.aria-controls]="'faq-' + i"
+                        [id]="'faq-btn-' + i"
+                      >
+                        {{ f.q }}
+                        <span class="faq__sign" aria-hidden="true"></span>
+                      </button>
+                    </h3>
+                    <div
+                      class="faq__a"
+                      [id]="'faq-' + i"
+                      role="region"
+                      [attr.aria-labelledby]="'faq-btn-' + i"
+                      [hidden]="openFaq() !== i"
+                    >
+                      <p>{{ f.a }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </section>
+          </article>
+
+          <aside class="detail-aside">
+            <div class="aside-card">
+              <h2 class="h4">Rezervujte si termín</h2>
+              <p class="aside-card__price price"><small>od</small> {{ s.price_from | eur }}</p>
+              <p class="muted small">{{ config.booking.confirmationNote }}</p>
+              <a class="btn btn--block" routerLink="/objednat-sa" [queryParams]="{ service: s.slug }">
+                Objednať sa online
+              </a>
+              <a class="btn btn--outline btn--block" [href]="config.contact.phoneHref">
+                <app-icon name="phone" [size]="16" /> Zavolať na recepciu
+              </a>
+            </div>
+
+            @if (vets().length) {
+              <div class="aside-card">
+                <h2 class="h4">Lekári tohto oddelenia</h2>
+                <ul role="list" class="aside-vets">
+                  @for (v of vets(); track v.id) {
+                    <li>
+                      <img [src]="v.photo_url" alt="" width="48" height="48" loading="lazy" />
+                      <span>
+                        <a routerLink="/nas-tim" [fragment]="v.slug">{{ v.full_name_with_titles }}</a>
+                        <small>{{ v.role }}</small>
+                      </span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+
+            <div class="aside-card aside-card--emergency">
+              <app-icon name="siren" [size]="22" />
+              <p>
+                <strong>Ide o akútny stav?</strong>
+                Nečakajte na termín a volajte pohotovosť
+                <a class="phone" [href]="config.contact.emergencyPhoneHref">{{ config.contact.emergencyPhone }}</a>.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      @if (related().length) {
+        <section class="section section--soft" aria-labelledby="related-title">
+          <div class="container">
+            <div class="section-head">
+              <span class="eyebrow">{{ s.department.name }}</span>
+              <h2 id="related-title">Súvisiace vyšetrenia</h2>
+            </div>
+            <div class="grid-3">
+              @for (r of related(); track r.id) {
+                <app-service-card [service]="r" />
+              }
+            </div>
+          </div>
+        </section>
+      }
+    }
+  }
+}
