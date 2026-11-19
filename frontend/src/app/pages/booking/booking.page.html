@@ -1,0 +1,446 @@
+<header class="page-header page-header--compact">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Omrvinková navigácia">
+      <a routerLink="/">Domov</a><span aria-hidden="true">/</span><span>Online objednanie</span>
+    </nav>
+    <h1>Objednajte sa na vyšetrenie</h1>
+    <p class="lead">Štyri krátke kroky a máte hotovo. {{ config.booking.confirmationNote }}</p>
+  </div>
+</header>
+
+<section class="section section--tight">
+  <div class="container booking" id="wizard-top">
+    @if (result(); as r) {
+      <!-- ================= CONFIRMATION ================= -->
+      <div class="confirm" role="status">
+        <div class="confirm__head">
+          <span class="confirm__icon"><app-icon name="check" [size]="36" [strokeWidth]="2.5" /></span>
+          <span class="eyebrow">Objednávka č. <span class="tabular">{{ r.id }}</span> prijatá</span>
+          <h2>Ďakujeme, tešíme sa na {{ r.pet_name }}!</h2>
+          <p class="lead">
+            {{ config.booking.confirmationNote }} Potvrdenie pošleme na <strong>{{ r.email }}</strong>.
+          </p>
+        </div>
+
+        <div class="confirm__grid">
+          <div class="confirm__card">
+            <h3 class="h4">Zhrnutie objednávky</h3>
+            <dl class="summary-list">
+              <div><dt>Zvieratko</dt><dd>{{ petLabel() }} · {{ r.pet_name }}</dd></div>
+              <div><dt>Dôvod návštevy</dt><dd>{{ reasonLabel() }}</dd></div>
+              @if (selectedService(); as s) {
+                <div><dt>Služba</dt><dd>{{ s.name }}</dd></div>
+              }
+              <div><dt>Lekár</dt><dd>{{ selectedVet()?.full_name_with_titles ?? 'Bez preferencie' }}</dd></div>
+              <div>
+                <dt>Preferovaný termín</dt>
+                <dd>{{ r.preferred_date | date: 'EEEE d. MMMM y' }} · {{ slotOption()?.label }} ({{ slotOption()?.hint }})</dd>
+              </div>
+              <div><dt>Kontakt</dt><dd>{{ r.owner_name }}, <span class="tabular">{{ r.phone }}</span></dd></div>
+            </dl>
+          </div>
+
+          <div class="confirm__card confirm__card--soft">
+            <h3 class="h4">Ako sa pripraviť na návštevu</h3>
+            <ul class="check-list">
+              @for (item of checklist(); track item) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+
+        <div class="confirm__actions">
+          <a routerLink="/" class="btn">Späť na úvod</a>
+          <button type="button" class="btn btn--outline" (click)="restart()">Objednať ďalšie zvieratko</button>
+          <a [href]="config.contact.phoneHref" class="btn btn--ghost">
+            <app-icon name="phone" [size]="16" /> Zmeniť termín telefonicky
+          </a>
+        </div>
+      </div>
+    } @else {
+      <!-- ================= WIZARD ================= -->
+      <div class="wizard">
+        <ol class="stepper" aria-label="Kroky objednávky">
+          @for (s of steps; track s.key; let i = $index) {
+            <li
+              class="stepper__item"
+              [class.is-current]="i === stepIndex()"
+              [class.is-done]="i < stepIndex() || (i <= maxReached() && i !== stepIndex())"
+            >
+              <button
+                type="button"
+                (click)="goTo(i)"
+                [disabled]="i > maxReached()"
+                [attr.aria-current]="i === stepIndex() ? 'step' : null"
+              >
+                <span class="stepper__num tabular">
+                  @if (i < stepIndex()) {
+                    <app-icon name="check" [size]="16" [strokeWidth]="2.5" />
+                  } @else {
+                    {{ i + 1 }}
+                  }
+                </span>
+                <span class="stepper__label">{{ s.title }}</span>
+                <span class="stepper__label stepper__label--short">{{ s.short }}</span>
+              </button>
+            </li>
+          }
+        </ol>
+
+        <form class="wizard__panel" [formGroup]="form" (ngSubmit)="next()" novalidate>
+          <p class="wizard__progress muted small">Krok {{ stepIndex() + 1 }} zo {{ steps.length }}</p>
+          <h2 class="h3 wizard__title">{{ currentStep().title }}</h2>
+
+          @if (serverMessage(); as msg) {
+            <div class="alert alert--error" role="alert">
+              <app-icon name="alert-triangle" />
+              <div>{{ msg }}</div>
+            </div>
+          }
+
+          @switch (currentStep().key) {
+            <!-- STEP 1 -->
+            @case ('pet') {
+              <fieldset class="field field--group">
+                <legend class="field__label">Aké zvieratko k nám prinesiete?</legend>
+                <div class="choice-grid choice-grid--4">
+                  @for (o of petOptions; track o.value) {
+                    <label class="choice choice--stacked">
+                      <input type="radio" formControlName="pet_species" [value]="o.value" (change)="clearServerError('pet_species')" />
+                      <span class="choice__icon"><app-icon [name]="o.icon ?? 'paw'" [size]="26" /></span>
+                      {{ o.label }}
+                    </label>
+                  }
+                </div>
+                @if (error('pet_species'); as e) {
+                  <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                }
+              </fieldset>
+
+              <div class="form-grid">
+                <div class="field">
+                  <label class="field__label" for="pet_name">Meno zvieratka</label>
+                  <input
+                    id="pet_name"
+                    class="input"
+                    formControlName="pet_name"
+                    placeholder="napr. Bady"
+                    autocomplete="off"
+                    [attr.aria-invalid]="!!error('pet_name')"
+                    (input)="clearServerError('pet_name')"
+                  />
+                  @if (error('pet_name'); as e) {
+                    <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                  }
+                </div>
+                <div class="field">
+                  <label class="field__label" for="pet_age">Vek <span class="optional">(nepovinné)</span></label>
+                  <input id="pet_age" class="input" formControlName="pet_age" placeholder="napr. 4 roky, 8 mesiacov" autocomplete="off" />
+                  <span class="field__hint">Pomôže nám pripraviť vhodný rozsah vyšetrenia.</span>
+                </div>
+              </div>
+            }
+
+            <!-- STEP 2 -->
+            @case ('visit') {
+              <fieldset class="field field--group">
+                <legend class="field__label">S čím vám môžeme pomôcť?</legend>
+                <div class="choice-list">
+                  @for (o of reasonOptions; track o.value) {
+                    <label class="choice">
+                      <input type="radio" formControlName="visit_reason" [value]="o.value" (change)="clearServerError('visit_reason')" />
+                      <span class="choice__icon choice__icon--sm"><app-icon [name]="o.icon ?? 'paw'" [size]="20" /></span>
+                      <span class="choice__text">
+                        {{ o.label }}
+                        <small>{{ o.hint }}</small>
+                      </span>
+                    </label>
+                  }
+                </div>
+                @if (error('visit_reason'); as e) {
+                  <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                }
+              </fieldset>
+
+              <div class="field">
+                <label class="field__label" for="service">Konkrétne vyšetrenie <span class="optional">(nepovinné)</span></label>
+                <select id="service" class="select" [value]="value().service" (change)="selectService($event)">
+                  <option value="">Neviem / nechám na lekárovi</option>
+                  @for (d of store.departments(); track d.id) {
+                    <optgroup [label]="d.name">
+                      @for (s of d.services; track s.id) {
+                        <option [value]="s.slug" [selected]="s.slug === value().service">
+                          {{ s.name }} (od {{ s.price_from | eur }})
+                        </option>
+                      }
+                    </optgroup>
+                  }
+                </select>
+                @if (selectedService(); as s) {
+                  <span class="field__hint">
+                    {{ s.department.name }} · približne {{ s.duration_minutes | duration }} · od {{ s.price_from | eur }}
+                  </span>
+                }
+                @if (error('service'); as e) {
+                  <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                }
+              </div>
+
+              <fieldset class="field field--group">
+                <legend class="field__label">Preferovaný lekár <span class="optional">(nepovinné)</span></legend>
+                <div class="vet-choices">
+                  <label class="choice vet-choice">
+                    <input type="radio" formControlName="preferred_vet" [value]="null" />
+                    <span class="vet-choice__avatar vet-choice__avatar--any"><app-icon name="stethoscope" [size]="22" /></span>
+                    <span class="choice__text">
+                      Bez preferencie
+                      <small>Prvý voľný lekár</small>
+                    </span>
+                  </label>
+                  @for (v of store.bookableVets(); track v.id) {
+                    <label class="choice vet-choice">
+                      <input type="radio" formControlName="preferred_vet" [value]="v.id" (change)="clearServerError('preferred_vet')" />
+                      <img class="vet-choice__avatar" [src]="v.photo_url" alt="" width="48" height="48" loading="lazy" />
+                      <span class="choice__text">
+                        {{ v.full_name_with_titles }}
+                        <small>{{ v.role }}</small>
+                        @if (vetsForService().has(v.id)) {
+                          <span class="badge vet-choice__badge">Odporúčaný pre vybrané vyšetrenie</span>
+                        }
+                      </span>
+                    </label>
+                  }
+                </div>
+                @if (error('preferred_vet'); as e) {
+                  <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                }
+              </fieldset>
+            }
+
+            <!-- STEP 3 -->
+            @case ('term') {
+              <fieldset class="field field--group">
+                <legend class="field__label">Ktorý deň vám vyhovuje?</legend>
+                <div class="date-chips">
+                  @for (d of quickDates; track d.iso) {
+                    <button
+                      type="button"
+                      class="date-chip"
+                      [class.is-selected]="value().preferred_date === d.iso"
+                      [attr.aria-pressed]="value().preferred_date === d.iso"
+                      (click)="setControl('preferred_date', d.iso)"
+                    >
+                      <small>{{ d.date | date: 'EEE' }}</small>
+                      <strong class="tabular">{{ d.date | date: 'd.' }}</strong>
+                      <small>{{ d.date | date: 'MMM' }}</small>
+                    </button>
+                  }
+                </div>
+                <div class="field date-field">
+                  <label class="field__label" for="preferred_date">Alebo vyberte iný dátum</label>
+                  <input
+                    id="preferred_date"
+                    type="date"
+                    class="input"
+                    formControlName="preferred_date"
+                    [min]="todayIso"
+                    [max]="maxIso"
+                    [attr.aria-invalid]="!!error('preferred_date')"
+                    (input)="clearServerError('preferred_date')"
+                  />
+                  @if (error('preferred_date'); as e) {
+                    <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                  }
+                </div>
+              </fieldset>
+
+              <fieldset class="field field--group">
+                <legend class="field__label">Ktorá časť dňa?</legend>
+                <div class="choice-grid choice-grid--3">
+                  @for (o of slotOptions; track o.value) {
+                    <label class="choice choice--stacked">
+                      <input type="radio" formControlName="preferred_time_slot" [value]="o.value" (change)="clearServerError('preferred_time_slot')" />
+                      <span class="choice__icon"><app-icon [name]="o.icon ?? 'clock'" [size]="24" /></span>
+                      {{ o.label }}
+                      <small class="tabular">{{ o.hint }}</small>
+                    </label>
+                  }
+                </div>
+                @if (error('preferred_time_slot'); as e) {
+                  <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                }
+              </fieldset>
+
+              @if (requiresFasting()) {
+                <div class="alert alert--info">
+                  <app-icon name="info" />
+                  <div>
+                    <strong>Vybrané vyšetrenie si vyžaduje hladovku.</strong> Odporúčame rannú časť dňa, aby zvieratko
+                    nemuselo hladovať zbytočne dlho.
+                  </div>
+                </div>
+              }
+              <p class="muted small">
+                Presný čas vám potvrdí recepcia. Pri akútnych ťažkostiach nečakajte a volajte
+                <a class="phone" [href]="config.contact.emergencyPhoneHref">{{ config.contact.emergencyPhone }}</a>.
+              </p>
+            }
+
+            <!-- STEP 4 -->
+            @case ('contact') {
+              <div class="form-grid">
+                <div class="field field--full">
+                  <label class="field__label" for="owner_name">Meno a priezvisko</label>
+                  <input
+                    id="owner_name"
+                    class="input"
+                    formControlName="owner_name"
+                    autocomplete="name"
+                    placeholder="napr. Jana Nováková"
+                    [attr.aria-invalid]="!!error('owner_name')"
+                    (input)="clearServerError('owner_name')"
+                  />
+                  @if (error('owner_name'); as e) {
+                    <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                  }
+                </div>
+                <div class="field">
+                  <label class="field__label" for="phone">Telefón</label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    class="input tabular"
+                    formControlName="phone"
+                    autocomplete="tel"
+                    placeholder="+421 900 123 456"
+                    [attr.aria-invalid]="!!error('phone')"
+                    (input)="clearServerError('phone')"
+                  />
+                  @if (error('phone'); as e) {
+                    <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                  }
+                </div>
+                <div class="field">
+                  <label class="field__label" for="email">E-mail</label>
+                  <input
+                    id="email"
+                    type="email"
+                    class="input"
+                    formControlName="email"
+                    autocomplete="email"
+                    placeholder="meno@domena.sk"
+                    [attr.aria-invalid]="!!error('email')"
+                    (input)="clearServerError('email')"
+                  />
+                  @if (error('email'); as e) {
+                    <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                  }
+                </div>
+                <div class="field field--full">
+                  <label class="field__label" for="notes">Poznámka pre lekára <span class="optional">(nepovinné)</span></label>
+                  <textarea
+                    id="notes"
+                    class="textarea"
+                    formControlName="notes"
+                    rows="4"
+                    placeholder="Opíšte stručne ťažkosti, ako dlho trvajú, prípadne lieky, ktoré zvieratko užíva."
+                  ></textarea>
+                  @if (error('notes'); as e) {
+                    <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                  }
+                </div>
+                <div class="field field--full">
+                  <label class="checkbox">
+                    <input type="checkbox" formControlName="gdpr_consent" [attr.aria-invalid]="!!error('gdpr_consent')" />
+                    <span>
+                      Súhlasím so spracovaním osobných údajov na účel vybavenia objednávky v zmysle
+                      <a routerLink="/ochrana-osobnych-udajov" target="_blank">zásad ochrany osobných údajov</a>.
+                    </span>
+                  </label>
+                  @if (error('gdpr_consent'); as e) {
+                    <span class="field__error" role="alert"><app-icon name="alert-triangle" [size]="14" />{{ e }}</span>
+                  }
+                </div>
+              </div>
+            }
+          }
+
+          <div class="wizard__nav">
+            @if (stepIndex() > 0) {
+              <button type="button" class="btn btn--ghost" (click)="back()">
+                <app-icon name="arrow-left" [size]="16" /> Späť
+              </button>
+            }
+            <button type="submit" class="btn btn--lg wizard__next" [disabled]="submitting()">
+              @if (submitting()) {
+                <app-icon name="loader" [size]="18" class="spin" /> Odosielame…
+              } @else if (stepIndex() === steps.length - 1) {
+                <app-icon name="check" [size]="18" /> Odoslať objednávku
+              } @else {
+                Pokračovať <app-icon name="arrow-right" [size]="16" />
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ================= SUMMARY SIDEBAR ================= -->
+      <aside class="summary" aria-label="Zhrnutie objednávky">
+        <div class="summary__card">
+          <h2 class="h4">Vaša objednávka</h2>
+          <dl class="summary-list">
+            <div>
+              <dt><app-icon name="paw" [size]="16" /> Zvieratko</dt>
+              <dd>
+                @if (value().pet_species || value().pet_name) {
+                  {{ petLabel() }}@if (value().pet_name) { · {{ value().pet_name }} }
+                } @else {
+                  <span class="summary__empty">Zatiaľ nevybrané</span>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt><app-icon name="stethoscope" [size]="16" /> Dôvod</dt>
+              <dd>{{ reasonLabel() || '—' }}</dd>
+            </div>
+            @if (selectedService(); as s) {
+              <div>
+                <dt><app-icon name="file-text" [size]="16" /> Vyšetrenie</dt>
+                <dd>
+                  {{ s.name }}
+                  <small class="summary__meta tabular">{{ s.duration_minutes | duration }} · od {{ s.price_from | eur }}</small>
+                </dd>
+              </div>
+            }
+            <div>
+              <dt><app-icon name="user" [size]="16" /> Lekár</dt>
+              <dd>{{ selectedVet()?.full_name_with_titles ?? 'Bez preferencie' }}</dd>
+            </div>
+            <div>
+              <dt><app-icon name="calendar" [size]="16" /> Termín</dt>
+              <dd>
+                @if (value().preferred_date && !form.controls.preferred_date.invalid) {
+                  {{ value().preferred_date | date: 'EEEE d. MMMM' }}
+                } @else {
+                  —
+                }
+                @if (slotOption(); as slot) {
+                  <small class="summary__meta tabular">{{ slot.label }} · {{ slot.hint }}</small>
+                }
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="summary__help">
+          <app-icon name="siren" [size]="22" />
+          <p>
+            <strong>Akútny stav?</strong> Online objednávka nie je určená na urgentné prípady. Volajte nonstop linku
+            <a class="phone" [href]="config.contact.emergencyPhoneHref">{{ config.contact.emergencyPhone }}</a>.
+          </p>
+        </div>
+      </aside>
+    }
+  </div>
+</section>
